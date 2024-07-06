@@ -1,0 +1,17 @@
+﻿<Window x:Class="ProjectManagement.NewDesignObjectWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        mc:Ignorable="d"
+        Title="Создание нового объекта проектирования" Height="250" Width="400">
+    <Grid>
+        <StackPanel Margin="10">
+            <TextBlock Text="Название объекта:" />
+            <TextBox Name="DesignObjectNameTextBox" Margin="0,5,0,15" />
+            <TextBlock Text="Код объекта:" />
+            <TextBox Name="DesignObjectCodeTextBox" Margin="0,5,0,15" />
+            <Button Content="Создать" Click="CreateDesignObjectButton_Click" HorizontalAlignment="Right" />
+        </StackPanel>
+    </Grid>
+</Window>

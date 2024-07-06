@@ -1,0 +1,28 @@
+﻿<Window x:Class="ProjectManagement.LookupManagementWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        mc:Ignorable="d"
+        Title="Управление справочниками" Height="250" Width="400"
+        WindowStartupLocation="CenterScreen">
+    <Grid>
+        <ScrollViewer>
+            <StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="5">
+                    <Button Content="Добавить" Click="AddItemButton_Click" Margin="5" />
+                    <Button Content="Изменить" Click="EditItemButton_Click" Margin="5" />
+                    <Button Content="Удалить" Click="DeleteItemButton_Click" Margin="5" />
+                </StackPanel>
+                <ListView Name="LookupListView" Margin="5">
+                    <ListView.View>
+                        <GridView>
+                            <GridViewColumn Header="Краткое название" DisplayMemberBinding="{Binding ShortName}" />
+                            <GridViewColumn Header="Полное название" DisplayMemberBinding="{Binding FullName}" />
+                        </GridView>
+                    </ListView.View>
+                </ListView>
+            </StackPanel>
+        </ScrollViewer>
+    </Grid>
+</Window>
