@@ -27,7 +27,7 @@ public partial class EditLookupWindow {
     private void SaveButton_Click(object sender, RoutedEventArgs e) {
         _item.ShortName = ShortNameTextBox.Text;
         _item.FullName = FullNameTextBox.Text;
-        if (_item.Id == 0) {
+        if (_item.Id == 0)
             switch (_lookup) {
                 case Constants.Lookups.Contractor:
                     _context.Set<Contractor>().Add((_item as Contractor)!);
@@ -39,7 +39,6 @@ public partial class EditLookupWindow {
                     _context.Set<DocumentType>().Add((_item as DocumentType)!);
                     break;
             }
-        }
         _context.SaveChanges();
         DialogResult = true;
         Close();

@@ -4,13 +4,15 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         mc:Ignorable="d"
-        Title="Создание нового объекта проектирования" Height="250" Width="400">
+        Title="Создание нового объекта проектирования" Height="270" Width="400">
     <Grid>
         <StackPanel Margin="10">
             <TextBlock Text="Название объекта:" />
             <TextBox Name="DesignObjectNameTextBox" Margin="0,5,0,15" />
             <TextBlock Text="Код объекта:" />
             <TextBox Name="DesignObjectCodeTextBox" Margin="0,5,0,15" />
+            <TextBlock Text="Подрядчик:" />
+            <ComboBox Name="ContractorComboBox" Margin="0,5,0,15" DisplayMemberPath="ShortName" />
             <Button Content="Создать" Click="CreateDesignObjectButton_Click" HorizontalAlignment="Right" />
         </StackPanel>
     </Grid>
