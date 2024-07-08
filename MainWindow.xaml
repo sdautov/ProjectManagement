@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:ProjectManagement.Models"
         mc:Ignorable="d"
-        Title="MainWindow" Height="600" Width="1000" Loaded="Window_Loaded"
+        Title="MainWindow" Height="600" Width="1100"
         WindowStartupLocation="CenterScreen">
     <Grid>
         <Grid.RowDefinitions>
@@ -38,21 +38,33 @@
             </Grid.ColumnDefinitions>
 
             <TreeView Name="ProjectTreeView" Grid.Column="0" SelectedItemChanged="ProjectTreeView_SelectedItemChanged" ItemsSource="{Binding Projects}">
-                <TreeView.ItemTemplate>
+                <TreeView.Resources>
+                    <!-- Project -->
                     <HierarchicalDataTemplate DataType="{x:Type local:Project}" ItemsSource="{Binding DesignObjects}">
                         <TextBlock Text="{Binding Name}" />
+                    </HierarchicalDataTemplate>
+
+                    <!-- DesignObject -->
+                    <HierarchicalDataTemplate DataType="{x:Type local:DesignObject}" ItemsSource="{Binding Children}">
+                        <TextBlock Text="{Binding Name}" />
                         <HierarchicalDataTemplate.ItemTemplate>
-                            <HierarchicalDataTemplate DataType="{x:Type local:DesignObject}" ItemsSource="{Binding InverseParentObject}">
-                                <TextBlock Text="{Binding Name}" />
-                                <HierarchicalDataTemplate.ItemTemplate>
-                                    <HierarchicalDataTemplate DataType="{x:Type local:DesignObject}" ItemsSource="{Binding InverseParentObject}">
-                                        <TextBlock Text="{Binding Name}" />
-                                    </HierarchicalDataTemplate>
-                                </HierarchicalDataTemplate.ItemTemplate>
-                            </HierarchicalDataTemplate>
+                            <DataTemplate>
+                                <TreeViewItem Header="{Binding Name}" ItemsSource="{Binding Children}">
+                                    <TreeViewItem.ItemTemplate>
+                                        <HierarchicalDataTemplate DataType="{x:Type local:DesignObject}" ItemsSource="{Binding Children}">
+                                            <TextBlock Text="{Binding Name}" />
+                                        </HierarchicalDataTemplate>
+                                    </TreeViewItem.ItemTemplate>
+                                </TreeViewItem>
+                            </DataTemplate>
                         </HierarchicalDataTemplate.ItemTemplate>
                     </HierarchicalDataTemplate>
-                </TreeView.ItemTemplate>
+
+                    <!-- DocumentationSet -->
+                    <DataTemplate DataType="{x:Type local:DocumentationSet}">
+                        <TextBlock Text="{Binding FullSetCode}" />
+                    </DataTemplate>
+                </TreeView.Resources>
             </TreeView>
 
             <GridSplitter Grid.Column="1" Width="5" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" />
@@ -62,13 +74,16 @@
                     <TextBlock Name="ProjectNameTextBlock" FontSize="16" FontWeight="Bold" Margin="10" />
                     <StackPanel Orientation="Horizontal" Margin="5">
                         <Button Content="Добавить объект проектирования" Click="AddDesignObjectButton_Click" HorizontalAlignment="Left" Margin="5" />
-                        <Button Content="Удалить" Click="DeleteProjectButton_Click" HorizontalAlignment="Left" Margin="5" />
+                        <Button Content="Удалить проект" Click="DeleteProjectButton_Click" HorizontalAlignment="Left" Margin="5" />
+                        <Button Content="Добавить комплект" Click="AddDocumentationSetButton_Click" HorizontalAlignment="Left" Margin="5" />
+                        <Button Content="Удалить комплект" Click="DeleteDocumentationSetButton_Click" HorizontalAlignment="Left" Margin="5" />
+                        <Button Content="Редактировать комплект" Click="EditDocumentationSetButton_Click" HorizontalAlignment="Left" Margin="5" />
                     </StackPanel>
 
-                    <DataGrid Name="ProjectDataGrid" AutoGenerateColumns="False" Margin="10" IsReadOnly="True">
+                    <DataGrid Name="ProjectDataGrid" AutoGenerateColumns="False" Margin="10" IsReadOnly="True" SelectionMode="Single">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Шифр проекта" Binding="{Binding ProjectCode}" />
-                            <DataGridTextColumn Header="Полный код объекта" Binding="{Binding FullObjectCode}" />
+                            <DataGridTextColumn Header="Полный код объекта" Binding="{Binding DesignObjectCode}" />
                             <DataGridTextColumn Header="Марка" Binding="{Binding Mark}" />
                             <DataGridTextColumn Header="Номер" Binding="{Binding Number}" />
                             <DataGridTextColumn Header="Полный шифр комплекта" Binding="{Binding FullSetCode}" />
@@ -77,14 +92,20 @@
                             <DataGridTextColumn Header="Дата изменения" Binding="{Binding ModificationDate}" />
                         </DataGrid.Columns>
                     </DataGrid>
+
                 </StackPanel>
 
                 <StackPanel Name="DocumentationSetPanel" Visibility="Collapsed">
-                    <DataGrid Name="DocumentationDataGrid" AutoGenerateColumns="False" Margin="10" IsReadOnly="True">
+                    <StackPanel Orientation="Horizontal" Margin="10">
+                        <Button Content="Добавить документ" Click="AddDocumentButton_Click" HorizontalAlignment="Left" Margin="5" />
+                        <Button Content="Удалить документ" Click="DeleteDocumentButton_Click" HorizontalAlignment="Left" Margin="5" />
+                        <Button Content="Редактировать документ" Click="EditDocumentButton_Click" HorizontalAlignment="Left" Margin="5" />
+                    </StackPanel>
+                    <DataGrid Name="DocumentationDataGrid" AutoGenerateColumns="False" Margin="10" IsReadOnly="True" SelectionMode="Single">
                         <DataGrid.Columns>
                             <DataGridTextColumn Header="Тип документа" Binding="{Binding DocumentType}" />
-                            <DataGridTextColumn Header="Номер документа" Binding="{Binding DocumentNumber}" />
-                            <DataGridTextColumn Header="Название" Binding="{Binding DocumentName}" />
+                            <DataGridTextColumn Header="Номер документа" Binding="{Binding Number}" />
+                            <DataGridTextColumn Header="Название" Binding="{Binding Name}" />
                             <DataGridTextColumn Header="Полный шифр документа" Binding="{Binding FullDocumentCode}" />
                             <DataGridTextColumn Header="Дата создания" Binding="{Binding CreationDate}" />
                             <DataGridTextColumn Header="Дата изменения" Binding="{Binding ModificationDate}" />
