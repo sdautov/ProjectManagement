@@ -1,4 +1,7 @@
-﻿namespace ProjectManagement.Models;
+﻿using System.Collections.ObjectModel;
+using System.ComponentModel.DataAnnotations.Schema;
+
+namespace ProjectManagement.Models;
 
 public class DesignObject : BaseEntity {
     public int ProjectId { get; set; }
@@ -11,4 +14,8 @@ public class DesignObject : BaseEntity {
     public virtual ICollection<DesignObject> InverseParentObject { get; set; } = new List<DesignObject>();
     public virtual DesignObject? ParentObject { get; set; }
     public virtual Project Project { get; set; } = null!;
+
+    [NotMapped] public ICollection<object> Children { get; set; } = new ObservableCollection<object>();
+
+    [NotMapped] public string FullDesignObjectCode => ParentObject != null ? ParentObject.FullDesignObjectCode + "." + Code : Code;
 }
