@@ -1,4 +1,6 @@
-﻿namespace ProjectManagement.Models;
+﻿using System.ComponentModel.DataAnnotations.Schema;
+
+namespace ProjectManagement.Models;
 
 public class Document : BaseEntity {
     public int DocumentationSetId { get; set; }
@@ -7,4 +9,6 @@ public class Document : BaseEntity {
     public string Name { get; set; } = null!;
     public virtual DocumentType DocumentType { get; set; } = null!;
     public virtual DocumentationSet DocumentationSet { get; set; } = null!;
+
+    [NotMapped] public string FullDocumentCode => $"{DocumentType}-{Number}";
 }

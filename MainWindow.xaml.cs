@@ -12,6 +12,7 @@ public partial class MainWindow : INotifyPropertyChanged {
     private ObservableCollection<Project> _projects;
 
     public MainWindow() {
+        _context.Database.Migrate();
         InitializeComponent();
         DataContext = this;
         LoadProjects();
@@ -29,10 +30,6 @@ public partial class MainWindow : INotifyPropertyChanged {
 
     public event PropertyChangedEventHandler PropertyChanged;
 
-    private void Window_Loaded(object sender, RoutedEventArgs e) {
-        _context.Database.Migrate();
-    }
-
     protected override void OnClosing(CancelEventArgs e) {
         _context.Dispose();
         base.OnClosing(e);
@@ -42,22 +39,36 @@ public partial class MainWindow : INotifyPropertyChanged {
         var projects = _context.Projects
             .Include(p => p.DesignObjects)
             .ThenInclude(d => d.InverseParentObject)
+            .Include(p => p.DesignObjects)
+            .ThenInclude(d => d.DocumentationSets)
+            .ThenInclude(d => d.Mark)
+            .Include(p => p.DesignObjects)
+            .ThenInclude(d => d.DocumentationSets)
+            .ThenInclude(d => d.Documents)
+            .Include(p => p.DesignObjects)
+            .ThenInclude(d => d.Contractor)
+            .Include(p => p.Contractor)
             .ToList();
-        foreach (var project in projects) {
-            foreach (var designObject in project.DesignObjects.ToList()) {
-                RemoveChildDesignObjects(project.DesignObjects, designObject);
-            }
-        }
 
         Projects = new ObservableCollection<Project>(projects);
+
+        foreach (var project in Projects)
+        foreach (var designObject in project.DesignObjects)
+            PopulateDesignObjectChildren(designObject);
+
+        ProjectTreeView.ItemsSource = Projects;
     }
 
-    private void RemoveChildDesignObjects(ICollection<DesignObject> designObjects, DesignObject parentObject) {
-        foreach (var childObject in parentObject.InverseParentObject.ToList()) {
-            designObjects.Remove(childObject);
-            RemoveChildDesignObjects(designObjects, childObject);
+    private static void PopulateDesignObjectChildren(DesignObject designObject) {
+        var children = new ObservableCollection<object>();
+        foreach (var childObject in designObject.InverseParentObject) {
+            PopulateDesignObjectChildren(childObject);
+            children.Add(childObject);
         }
+        foreach (var documentationSet in designObject.DocumentationSets) children.Add(documentationSet);
+        designObject.Children = children;
     }
+
 
     private void ProjectTreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e) {
         if (ProjectTreeView.SelectedItem is Project selectedProject)
@@ -74,22 +85,8 @@ public partial class MainWindow : INotifyPropertyChanged {
         ProjectOverviewPanel.Visibility = Visibility.Visible;
         DocumentationSetPanel.Visibility = Visibility.Collapsed;
         EmptyStatePanel.Visibility = Visibility.Collapsed;
-
         ProjectNameTextBlock.Text = project.Name;
-
-        var projectData = project.DesignObjects.SelectMany(obj => obj.DocumentationSets.Select(set => new {
-            ProjectCode = project.Code,
-            FullObjectCode = obj.ParentObject.Code != null ? $"{obj.ParentObject.Code}.{obj.Code}" : obj.Code,
-            set.Mark,
-            set.Number,
-            FullSetCode = set.Number > 0
-                ? $"{project.Code}-{obj.ParentObject.Code ?? obj.Code}-{set.Mark}{set.Number}"
-                : $"{project.Code}-{obj.ParentObject.Code ?? obj.Code}-{set.Mark}",
-            Contractor = obj.Contractor ?? project.Contractor,
-            set.CreationDate,
-            set.ModificationDate
-        })).ToList();
-
+        var projectData = project.DesignObjects.SelectMany(obj => obj.DocumentationSets).ToList();
         ProjectDataGrid.ItemsSource = projectData;
     }
 
@@ -97,40 +94,74 @@ public partial class MainWindow : INotifyPropertyChanged {
         ProjectOverviewPanel.Visibility = Visibility.Visible;
         DocumentationSetPanel.Visibility = Visibility.Collapsed;
         EmptyStatePanel.Visibility = Visibility.Collapsed;
-
         ProjectNameTextBlock.Text = designObject.Name;
-
-        var projectData = designObject.DocumentationSets.Select(set => new {
-            ProjectCode = designObject.Project.Code,
-            FullObjectCode = designObject.ParentObject.Code != null ? $"{designObject.ParentObject.Code}.{designObject.Code}" : designObject.Code,
-            set.Mark,
-            set.Number,
-            FullSetCode = set.Number > 0
-                ? $"{designObject.Project.Code}-{designObject.ParentObject.Code ?? designObject.Code}-{set.Mark}{set.Number}"
-                : $"{designObject.Project.Code}-{designObject.ParentObject.Code ?? designObject.Code}-{set.Mark}",
-            Contractor = designObject.Contractor ?? designObject.Project.Contractor,
-            set.CreationDate,
-            set.ModificationDate
-        }).ToList();
-
+        var projectData = designObject.DocumentationSets.ToList();
         ProjectDataGrid.ItemsSource = projectData;
+    }
+
+    private void AddDocumentButton_Click(object sender, RoutedEventArgs e) {
+        if (ProjectTreeView.SelectedItem is DocumentationSet selectedSet) {
+            var newDocumentWindow = new NewDocumentWindow(_context);
+            if (newDocumentWindow.ShowDialog() == true) {
+                var newDocument = new Document {
+                    DocumentType = newDocumentWindow.DocumentType,
+                    Number = newDocumentWindow.Number,
+                    Name = newDocumentWindow.DocumentName,
+                    CreationDate = DateTime.Now,
+                    ModificationDate = DateTime.Now
+                };
+                selectedSet.Documents.Add(newDocument);
+                _context.SaveChanges();
+                DocumentationDataGrid.ItemsSource = selectedSet.Documents.ToList();
+            }
+        }
+        else {
+            MessageBox.Show("Выберите комплект для добавления документа.", "Добавление документа", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+    }
+
+    private void DeleteDocumentButton_Click(object sender, RoutedEventArgs e) {
+        if (DocumentationDataGrid.SelectedItem is Document selectedDocument) {
+            var result = MessageBox.Show($"Вы действительно хотите удалить документ '{selectedDocument.Name}'?", "Удаление документа", MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+            if (result == MessageBoxResult.Yes) {
+                _context.Documents.Remove(selectedDocument);
+                _context.SaveChanges();
+                LoadProjects();
+            }
+        }
+        else {
+            MessageBox.Show("Выберите документ для удаления.", "Удаление документа", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+    }
+
+    private void EditDocumentButton_Click(object sender, RoutedEventArgs e) {
+        if (DocumentationDataGrid.SelectedItem is Document selectedDocument) {
+            var editDocumentWindow = new NewDocumentWindow(_context) {
+                DocumentType = selectedDocument.DocumentType,
+                Number = selectedDocument.Number,
+                DocumentName = selectedDocument.Name
+            };
+            if (editDocumentWindow.ShowDialog() == true) {
+                selectedDocument.DocumentType = editDocumentWindow.DocumentType;
+                selectedDocument.Number = editDocumentWindow.Number;
+                selectedDocument.Name = editDocumentWindow.DocumentName;
+                selectedDocument.ModificationDate = DateTime.Now;
+                _context.SaveChanges();
+                LoadProjects();
+                ShowDocumentationSetOverview(selectedDocument.DocumentationSet);
+            }
+        }
+        else {
+            MessageBox.Show("Выберите документ для редактирования.", "Редактирование документа", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
     }
 
     private void ShowDocumentationSetOverview(DocumentationSet set) {
         ProjectOverviewPanel.Visibility = Visibility.Collapsed;
         DocumentationSetPanel.Visibility = Visibility.Visible;
         EmptyStatePanel.Visibility = Visibility.Collapsed;
-
-        var documentationData = set.Documents.Select(doc => new {
-            doc.DocumentType,
-            doc.Number,
-            doc.Name,
-            FullDocumentCode = $"-{doc.DocumentType}-{doc.Number}",
-            doc.CreationDate,
-            doc.ModificationDate
-        }).ToList();
-
-        DocumentationDataGrid.ItemsSource = documentationData;
+        DocumentationDataGrid.ItemsSource = set.Documents.ToList();
     }
 
     private void HideAllPanels() {
@@ -138,6 +169,50 @@ public partial class MainWindow : INotifyPropertyChanged {
         DocumentationSetPanel.Visibility = Visibility.Collapsed;
         EmptyStatePanel.Visibility = Visibility.Visible;
     }
+
+    private void AddDocumentationSetButton_Click(object sender, RoutedEventArgs e) {
+        if (ProjectTreeView.SelectedItem is DesignObject selectedObject) {
+            var newDocumentationSetWindow = new NewDocumentationSetWindow(_context, selectedObject);
+            if (newDocumentationSetWindow.ShowDialog() == true) LoadProjects();
+        }
+        else {
+            MessageBox.Show("Выберите объект проектирования для добавления комплекта.", "Добавление комплекта", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+    }
+
+    private void DeleteDocumentationSetButton_Click(object sender, RoutedEventArgs e) {
+        if (ProjectDataGrid.SelectedItem is DocumentationSet selectedSet) {
+            var result = MessageBox.Show($"Вы действительно хотите удалить комплект '{selectedSet.FullSetCode}'?", "Удаление комплекта", MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+            if (result == MessageBoxResult.Yes)
+                try {
+                    _context.DocumentationSets.Remove(selectedSet);
+                    _context.SaveChanges();
+                    LoadProjects();
+                }
+                catch (Exception ex) {
+                    MessageBox.Show($"Ошибка при удалении комплекта: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+        }
+        else {
+            MessageBox.Show("Выберите комплект для удаления.", "Удаление комплекта", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+    }
+
+
+    private void EditDocumentationSetButton_Click(object sender, RoutedEventArgs e) {
+        if (ProjectDataGrid.SelectedItem is DocumentationSet selectedSet) {
+            var editDocumentationSetWindow = new EditDocumentationSetWindow(_context, selectedSet);
+            if (editDocumentationSetWindow.ShowDialog() == true) {
+                LoadProjects();
+                if (ProjectTreeView.SelectedItem is DesignObject selectedDesignObject) ShowDesignObjectOverview(selectedDesignObject);
+            }
+        }
+        else {
+            MessageBox.Show("Выберите комплект для редактирования.", "Редактирование комплекта", MessageBoxButton.OK, MessageBoxImage.Information);
+        }
+    }
+
 
     private void CreateProjectButton_Click(object sender, RoutedEventArgs e) {
         var newProjectWindow = new NewProjectWindow(_context);
