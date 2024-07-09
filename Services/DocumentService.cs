@@ -14,14 +14,22 @@ public class DocumentService {
             .Where(ds => ds.DocumentationSetId == document.DocumentationSetId)
             .Max(ds => (int?)ds.Number);
 
-        if (maxNumber != null) {
+        if (maxNumber != null)
             document.Number = (int)(maxNumber + 1);
-        }
-        else {
+        else
             document.Number = 1;
-        }
 
         _context.Documents.Add(document);
+        _context.SaveChanges();
+    }
+
+    public void EditDocument(Document document) {
+        _context.Documents.Update(document);
+        _context.SaveChanges();
+    }
+    
+    public void DeleteDocument(Document document) {
+        _context.Documents.Remove(document);
         _context.SaveChanges();
     }
 }

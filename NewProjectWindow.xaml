@@ -4,7 +4,8 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         mc:Ignorable="d"
-        Title="Создание нового проекта" Height="270" Width="400">
+        Title="Создание нового проекта" Height="270" Width="400"
+        WindowStartupLocation="CenterScreen">
     <Grid>
         <StackPanel Margin="10">
             <TextBlock Text="Название проекта:" />

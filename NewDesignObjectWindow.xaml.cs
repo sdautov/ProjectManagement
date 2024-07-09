@@ -8,10 +8,18 @@ public partial class NewDesignObjectWindow {
     private readonly DesignObject? _parentObject;
     private readonly Project _project;
 
-    public NewDesignObjectWindow(AppDbContext context, Project project, DesignObject? parentObject = null) {
+    public NewDesignObjectWindow(AppDbContext context, Project project) {
         InitializeComponent();
         _context = context;
-        _project = project == null ? parentObject.Project : project;
+        _project = project;
+        _parentObject = null;
+        LoadContractors();
+    }
+
+    public NewDesignObjectWindow(AppDbContext context, DesignObject parentObject) {
+        InitializeComponent();
+        _context = context;
+        _project = parentObject.Project;
         _parentObject = parentObject;
         LoadContractors();
     }

@@ -4,6 +4,7 @@ using System.Windows;
 using System.Windows.Controls;
 using Microsoft.EntityFrameworkCore;
 using ProjectManagement.Models;
+using ProjectManagement.Services;
 using ProjectManagement.ViewModels;
 
 namespace ProjectManagement;
@@ -109,13 +110,19 @@ public partial class MainWindow : INotifyPropertyChanged {
         DocumentationSetPanel.Visibility = Visibility.Collapsed;
         EmptyStatePanel.Visibility = Visibility.Collapsed;
         ProjectNameTextBlock.Text = designObject.Name;
-        var projectData = designObject.DocumentationSets.ToList();
+        var projectData = GetAllDocumentationSets(designObject);
         ProjectDataGrid.ItemsSource = projectData;
     }
-    
+
+    private List<DocumentationSet> GetAllDocumentationSets(DesignObject designObject) {
+        var documentationSets = new List<DocumentationSet>(designObject.DocumentationSets);
+        foreach (var child in designObject.InverseParentObject) documentationSets.AddRange(GetAllDocumentationSets(child));
+        return documentationSets;
+    }
+
     private void AddDocumentButton_Click(object sender, RoutedEventArgs e) {
         if (ProjectTreeView.SelectedItem is DocumentationSet selectedSet) {
-            var newDocumentWindow = new NewDocumentWindow(_context, selectedSet);
+            var newDocumentWindow = new EditDocumentWindow(_context, selectedSet);
             if (newDocumentWindow.ShowDialog() == true) DocumentationDataGrid.ItemsSource = selectedSet.Documents.ToList();
         }
         else {
@@ -128,9 +135,8 @@ public partial class MainWindow : INotifyPropertyChanged {
             var result = MessageBox.Show($"Вы действительно хотите удалить документ '{selectedDocument.Name}'?", "Удаление документа", MessageBoxButton.YesNo,
                 MessageBoxImage.Warning);
             if (result == MessageBoxResult.Yes) {
-                _context.Documents.Remove(selectedDocument);
-                _context.SaveChanges();
-                LoadProjects();
+                new DocumentService(_context).DeleteDocument(selectedDocument);
+                ShowDocumentationSetOverview(selectedDocument.DocumentationSet);
             }
         }
         else {
@@ -140,18 +146,8 @@ public partial class MainWindow : INotifyPropertyChanged {
 
     private void EditDocumentButton_Click(object sender, RoutedEventArgs e) {
         if (DocumentationDataGrid.SelectedItem is Document selectedDocument) {
-            var editDocumentWindow = new EditDocumentWindow(_context) {
-                DocumentType = selectedDocument.DocumentType,
-                Number = selectedDocument.Number,
-                DocumentName = selectedDocument.Name
-            };
+            var editDocumentWindow = new EditDocumentWindow(_context, selectedDocument);
             if (editDocumentWindow.ShowDialog() == true) {
-                selectedDocument.DocumentType = editDocumentWindow.DocumentType;
-                selectedDocument.Number = editDocumentWindow.Number;
-                selectedDocument.Name = editDocumentWindow.DocumentName;
-                selectedDocument.ModificationDate = DateTime.Now;
-                _context.SaveChanges();
-                LoadProjects();
                 ShowDocumentationSetOverview(selectedDocument.DocumentationSet);
             }
         }
@@ -175,7 +171,7 @@ public partial class MainWindow : INotifyPropertyChanged {
 
     private void AddDocumentationSetButton_Click(object sender, RoutedEventArgs e) {
         if (ProjectTreeView.SelectedItem is DesignObject selectedObject) {
-            var newDocumentationSetWindow = new NewDocumentationSetWindow(_context, selectedObject);
+            var newDocumentationSetWindow = new EditDocumentationSetWindow(_context, selectedObject);
             if (newDocumentationSetWindow.ShowDialog() == true) LoadProjects();
         }
         else {
@@ -187,15 +183,10 @@ public partial class MainWindow : INotifyPropertyChanged {
         if (ProjectDataGrid.SelectedItem is DocumentationSet selectedSet) {
             var result = MessageBox.Show($"Вы действительно хотите удалить комплект '{selectedSet.FullSetCode}'?", "Удаление комплекта", MessageBoxButton.YesNo,
                 MessageBoxImage.Warning);
-            if (result == MessageBoxResult.Yes)
-                try {
-                    _context.DocumentationSets.Remove(selectedSet);
-                    _context.SaveChanges();
-                    LoadProjects();
-                }
-                catch (Exception ex) {
-                    MessageBox.Show($"Ошибка при удалении комплекта: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
-                }
+            if (result == MessageBoxResult.Yes) {
+                new DocumentationSetService(_context).DeleteDocumentationSet(selectedSet);
+                LoadProjects();
+            }
         }
         else {
             MessageBox.Show("Выберите комплект для удаления.", "Удаление комплекта", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -226,7 +217,7 @@ public partial class MainWindow : INotifyPropertyChanged {
             if (newDesignObjectWindow.ShowDialog() == true) LoadProjects();
         }
         else if (ProjectTreeView.SelectedItem is DesignObject selectedObject) {
-            var newDesignObjectWindow = new NewDesignObjectWindow(_context, null, selectedObject);
+            var newDesignObjectWindow = new NewDesignObjectWindow(_context, selectedObject);
             if (newDesignObjectWindow.ShowDialog() == true) LoadProjects();
         }
     }
@@ -258,6 +249,18 @@ public partial class MainWindow : INotifyPropertyChanged {
                 }
                 catch (Exception ex) {
                     MessageBox.Show($"Ошибка при удалении проекта: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+        }
+        else if (ProjectTreeView.SelectedItem is DesignObject selectedObject) {
+            var result = MessageBox.Show($"Вы действительно хотите удалить объект '{selectedObject.Name}'?", "Удаление объекта", MessageBoxButton.YesNo, MessageBoxImage.Warning);
+            if (result == MessageBoxResult.Yes)
+                try {
+                    _context.DesignObjects.Remove(selectedObject);
+                    _context.SaveChanges();
+                    LoadProjects();
+                }
+                catch (Exception ex) {
+                    MessageBox.Show($"Ошибка при удалении объекта: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
         }
         else {

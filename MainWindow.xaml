@@ -16,7 +16,8 @@
         <Menu>
             <MenuItem Header="Файл">
                 <MenuItem Header="Создать проект" Click="CreateProjectButton_Click" />
-                <MenuItem Header="Удалить проект" Click="DeleteProjectButton_Click" />
+                <MenuItem Header="Создать объект" Click="AddDesignObjectButton_Click" />
+                <MenuItem Header="Удалить проект/объект" Click="DeleteProjectButton_Click" />
                 <Separator />
                 <MenuItem Header="Выход" Click="Exit_Click" />
             </MenuItem>
@@ -32,9 +33,9 @@
 
         <Grid Grid.Row="1">
             <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="3*" />
+                <ColumnDefinition Width="2*" />
                 <ColumnDefinition Width="Auto" />
-                <ColumnDefinition Width="7*" />
+                <ColumnDefinition Width="8*" />
             </Grid.ColumnDefinitions>
 
             <TreeView Name="ProjectTreeView" Grid.Column="0" SelectedItemChanged="ProjectTreeView_SelectedItemChanged" ItemsSource="{Binding Projects}">
@@ -42,7 +43,7 @@
                     <!-- Project -->
                     <HierarchicalDataTemplate DataType="{x:Type local:Project}" ItemsSource="{Binding Children}">
                         <StackPanel Orientation="Horizontal">
-                            <Image Source="/Icons/project_icon.png" Width="16" Height="16" Margin="0,0,5,0"/>
+                            <Image Source="/Icons/project_icon.png" Width="20" Margin="0,0,5,0" />
                             <TextBlock Text="{Binding Title}" />
                         </StackPanel>
                     </HierarchicalDataTemplate>
@@ -50,7 +51,7 @@
                     <!-- DesignObject -->
                     <HierarchicalDataTemplate DataType="{x:Type local:DesignObject}" ItemsSource="{Binding Children}">
                         <StackPanel Orientation="Horizontal">
-                            <Image Source="/Icons/design_object_icon.png" Width="16" Height="16" Margin="0,0,5,0"/>
+                            <Image Source="/Icons/design_object_icon.png" Width="16" Margin="0,0,5,0" />
                             <TextBlock Text="{Binding Title}" />
                         </StackPanel>
                     </HierarchicalDataTemplate>
@@ -58,7 +59,7 @@
                     <!-- DocumentationSet -->
                     <DataTemplate DataType="{x:Type local:DocumentationSet}">
                         <StackPanel Orientation="Horizontal">
-                            <Image Source="/Icons/documentation_set_icon.png" Width="16" Height="16" Margin="0,0,5,0"/>
+                            <Image Source="/Icons/documentation_set_icon.png" Width="16" Margin="0,0,5,0" />
                             <TextBlock Text="{Binding Title}" />
                         </StackPanel>
                     </DataTemplate>
@@ -71,8 +72,10 @@
                 <StackPanel Name="ProjectOverviewPanel" Visibility="Collapsed">
                     <TextBlock Name="ProjectNameTextBlock" FontSize="16" FontWeight="Bold" Margin="10" />
                     <StackPanel Orientation="Horizontal" Margin="5">
-                        <Button Content="Добавить объект проектирования" Click="AddDesignObjectButton_Click" HorizontalAlignment="Left" Margin="5" />
-                        <Button Content="Удалить проект" Click="DeleteProjectButton_Click" HorizontalAlignment="Left" Margin="5" />
+                        <Button Content="Создать объект проектирования" Click="AddDesignObjectButton_Click" HorizontalAlignment="Left" Margin="5" />
+                        <Button Content="Удалить текущий проект/объект" Click="DeleteProjectButton_Click" HorizontalAlignment="Left" Margin="5" />
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Margin="5">
                         <Button Content="Добавить комплект" Click="AddDocumentationSetButton_Click" HorizontalAlignment="Left" Margin="5" />
                         <Button Content="Удалить комплект" Click="DeleteDocumentationSetButton_Click" HorizontalAlignment="Left" Margin="5" />
                         <Button Content="Редактировать комплект" Click="EditDocumentationSetButton_Click" HorizontalAlignment="Left" Margin="5" />

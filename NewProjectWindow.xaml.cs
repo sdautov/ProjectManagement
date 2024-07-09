@@ -38,7 +38,7 @@ public partial class NewProjectWindow {
 
         var newProject = new Project {
             Name = projectName,
-            Code = projectName,
+            Code = projectCode,
             Contractor = selectedContractor,
             CreationDate = DateTime.Now,
             ModificationDate = DateTime.Now

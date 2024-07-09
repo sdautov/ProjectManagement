@@ -1,26 +1,36 @@
-﻿using System.Text.RegularExpressions;
-using System.Windows;
-using System.Windows.Input;
+﻿using System.Windows;
 using ProjectManagement.Models;
+using ProjectManagement.Services;
 
 namespace ProjectManagement;
 
-public partial class EditDocumentationSetWindow : Window {
+public partial class EditDocumentationSetWindow {
     private readonly AppDbContext _context;
-    private readonly DocumentationSet _documentationSet;
+    private readonly DocumentationSet? _currentSet;
+    private readonly DesignObject _designObject;
+    private readonly DocumentationSetService _documentationSetService;
 
-    public EditDocumentationSetWindow(AppDbContext context, DocumentationSet documentationSet) {
+    public EditDocumentationSetWindow(AppDbContext context, DesignObject designObject) {
         InitializeComponent();
         _context = context;
-        _documentationSet = documentationSet;
+        _designObject = designObject;
+        _documentationSetService = new DocumentationSetService(context);
         LoadMarks();
-        MarkComboBox.SelectedItem = _documentationSet.Mark;
-        NumberTextBox.Text = _documentationSet.Number.ToString();
     }
 
-    private void NumberValidationTextBox(object sender, TextCompositionEventArgs e) {
-        var regex = NumericRegex();
-        e.Handled = regex.IsMatch(e.Text);
+    public EditDocumentationSetWindow(AppDbContext context, DocumentationSet currentSet) {
+        InitializeComponent();
+        _context = context;
+        _designObject = currentSet.DesignObject;
+        _currentSet = currentSet;
+        _documentationSetService = new DocumentationSetService(context);
+        LoadMarks();
+        FillValues();
+    }
+
+    private void FillValues() {
+        MarkComboBox.SelectedItem = _currentSet!.Mark;
+        Title = _currentSet.FullSetCode;
     }
 
     private void LoadMarks() {
@@ -32,14 +42,20 @@ public partial class EditDocumentationSetWindow : Window {
             MessageBox.Show("Необходимо выбрать подрядчика.", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
             return;
         }
-        _documentationSet.Mark = selectedMark;
-        _documentationSet.Number = int.TryParse(NumberTextBox.Text, out var number) ? number : 0;
-        _documentationSet.ModificationDate = DateTime.Now;
-        _context.DocumentationSets.Update(_documentationSet);
-        _context.SaveChanges();
+        if (_currentSet != null) {
+            _currentSet.Mark = selectedMark;
+            _currentSet.ModificationDate = DateTime.Now;
+            _documentationSetService.EditDocumentationSet(_currentSet);
+        }
+        else {
+            var newSet = new DocumentationSet {
+                Mark = selectedMark,
+                CreationDate = DateTime.Now,
+                ModificationDate = DateTime.Now,
+                DesignObjectId = _designObject.Id
+            };
+            _documentationSetService.AddDocumentationSet(newSet);
+        }
         DialogResult = true;
     }
-
-    [GeneratedRegex("[^0-9]+")]
-    private static partial Regex NumericRegex();
 }

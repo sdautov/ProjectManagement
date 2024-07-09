@@ -1,7 +1,8 @@
 ﻿<Window x:Class="ProjectManagement.EditDocumentWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        Title="Редактировать документ" Height="300" Width="400">
+        Title="Добавить документ" Height="300" Width="400"
+        WindowStartupLocation="CenterScreen">
     <Grid Margin="10">
         <StackPanel Margin="10">
             <TextBlock Text="Тип документа:" Margin="5" />
