@@ -20,4 +20,19 @@
         </PackageReference>
     </ItemGroup>
 
+    <ItemGroup>
+      <None Remove="Icons\design_object_icon.png" />
+      <Resource Include="Icons\design_object_icon.png">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Resource>
+      <None Remove="Icons\documentation_set_icon.png" />
+      <Resource Include="Icons\documentation_set_icon.png">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Resource>
+      <None Remove="Icons\project_icon.png" />
+      <Resource Include="Icons\project_icon.png">
+        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      </Resource>
+    </ItemGroup>
+
 </Project>
