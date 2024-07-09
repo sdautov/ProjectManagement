@@ -40,29 +40,18 @@
             <TreeView Name="ProjectTreeView" Grid.Column="0" SelectedItemChanged="ProjectTreeView_SelectedItemChanged" ItemsSource="{Binding Projects}">
                 <TreeView.Resources>
                     <!-- Project -->
-                    <HierarchicalDataTemplate DataType="{x:Type local:Project}" ItemsSource="{Binding DesignObjects}">
-                        <TextBlock Text="{Binding Name}" />
+                    <HierarchicalDataTemplate DataType="{x:Type local:Project}" ItemsSource="{Binding Children}">
+                        <TextBlock Text="{Binding Title}" />
                     </HierarchicalDataTemplate>
 
                     <!-- DesignObject -->
                     <HierarchicalDataTemplate DataType="{x:Type local:DesignObject}" ItemsSource="{Binding Children}">
-                        <TextBlock Text="{Binding Name}" />
-                        <HierarchicalDataTemplate.ItemTemplate>
-                            <DataTemplate>
-                                <TreeViewItem Header="{Binding Name}" ItemsSource="{Binding Children}">
-                                    <TreeViewItem.ItemTemplate>
-                                        <HierarchicalDataTemplate DataType="{x:Type local:DesignObject}" ItemsSource="{Binding Children}">
-                                            <TextBlock Text="{Binding Name}" />
-                                        </HierarchicalDataTemplate>
-                                    </TreeViewItem.ItemTemplate>
-                                </TreeViewItem>
-                            </DataTemplate>
-                        </HierarchicalDataTemplate.ItemTemplate>
+                        <TextBlock Text="{Binding Title}" />
                     </HierarchicalDataTemplate>
 
                     <!-- DocumentationSet -->
                     <DataTemplate DataType="{x:Type local:DocumentationSet}">
-                        <TextBlock Text="{Binding FullSetCode}" />
+                        <TextBlock Text="{Binding Title}" />
                     </DataTemplate>
                 </TreeView.Resources>
             </TreeView>

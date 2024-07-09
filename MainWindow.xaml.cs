@@ -4,12 +4,13 @@ using System.Windows;
 using System.Windows.Controls;
 using Microsoft.EntityFrameworkCore;
 using ProjectManagement.Models;
+using ProjectManagement.ViewModels;
 
 namespace ProjectManagement;
 
 public partial class MainWindow : INotifyPropertyChanged {
     private readonly AppDbContext _context = new();
-    private ObservableCollection<Project> _projects;
+    private ObservableCollection<Project> _projects = [];
 
     public MainWindow() {
         _context.Database.Migrate();
@@ -28,7 +29,7 @@ public partial class MainWindow : INotifyPropertyChanged {
         }
     }
 
-    public event PropertyChangedEventHandler PropertyChanged;
+    public event PropertyChangedEventHandler? PropertyChanged;
 
     protected override void OnClosing(CancelEventArgs e) {
         _context.Dispose();
@@ -38,29 +39,41 @@ public partial class MainWindow : INotifyPropertyChanged {
     private void LoadProjects() {
         var projects = _context.Projects
             .Include(p => p.DesignObjects)
-            .ThenInclude(d => d.InverseParentObject)
-            .Include(p => p.DesignObjects)
-            .ThenInclude(d => d.DocumentationSets)
-            .ThenInclude(d => d.Mark)
-            .Include(p => p.DesignObjects)
-            .ThenInclude(d => d.DocumentationSets)
-            .ThenInclude(d => d.Documents)
-            .Include(p => p.DesignObjects)
-            .ThenInclude(d => d.Contractor)
             .Include(p => p.Contractor)
             .ToList();
 
+        foreach (var project in projects) {
+            project.Children = new ObservableCollection<ITreeViewItem>(project.DesignObjects
+                .Where(d => d.ParentObjectId == null)
+                .ToList());
+
+            foreach (var designObject in project.DesignObjects) LoadDesignObjectDetails(designObject);
+        }
+
         Projects = new ObservableCollection<Project>(projects);
+    }
 
-        foreach (var project in Projects)
-        foreach (var designObject in project.DesignObjects)
-            PopulateDesignObjectChildren(designObject);
+    private void LoadDesignObjectDetails(DesignObject designObject) {
+        _context.Entry(designObject)
+            .Collection(d => d.InverseParentObject)
+            .Load();
 
-        ProjectTreeView.ItemsSource = Projects;
+        _context.Entry(designObject)
+            .Collection(d => d.DocumentationSets)
+            .Query()
+            .Include(ds => ds.Mark)
+            .Include(ds => ds.Documents)
+            .Load();
+
+        _context.Entry(designObject)
+            .Reference(d => d.Contractor)
+            .Load();
+
+        PopulateDesignObjectChildren(designObject);
     }
 
     private static void PopulateDesignObjectChildren(DesignObject designObject) {
-        var children = new ObservableCollection<object>();
+        var children = new ObservableCollection<ITreeViewItem>();
         foreach (var childObject in designObject.InverseParentObject) {
             PopulateDesignObjectChildren(childObject);
             children.Add(childObject);
@@ -68,7 +81,6 @@ public partial class MainWindow : INotifyPropertyChanged {
         foreach (var documentationSet in designObject.DocumentationSets) children.Add(documentationSet);
         designObject.Children = children;
     }
-
 
     private void ProjectTreeView_SelectedItemChanged(object sender, RoutedPropertyChangedEventArgs<object> e) {
         if (ProjectTreeView.SelectedItem is Project selectedProject)
@@ -199,7 +211,6 @@ public partial class MainWindow : INotifyPropertyChanged {
         }
     }
 
-
     private void EditDocumentationSetButton_Click(object sender, RoutedEventArgs e) {
         if (ProjectDataGrid.SelectedItem is DocumentationSet selectedSet) {
             var editDocumentationSetWindow = new EditDocumentationSetWindow(_context, selectedSet);
@@ -212,7 +223,6 @@ public partial class MainWindow : INotifyPropertyChanged {
             MessageBox.Show("Выберите комплект для редактирования.", "Редактирование комплекта", MessageBoxButton.OK, MessageBoxImage.Information);
         }
     }
-
 
     private void CreateProjectButton_Click(object sender, RoutedEventArgs e) {
         var newProjectWindow = new NewProjectWindow(_context);
@@ -264,7 +274,7 @@ public partial class MainWindow : INotifyPropertyChanged {
         }
     }
 
-    protected virtual void OnPropertyChanged(string propertyName = null) {
+    protected virtual void OnPropertyChanged(string propertyName) {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
 }
