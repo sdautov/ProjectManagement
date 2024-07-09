@@ -1,28 +1,24 @@
-﻿using System.Text.RegularExpressions;
-using System.Windows;
-using System.Windows.Input;
+﻿using System.Windows;
 using ProjectManagement.Models;
+using ProjectManagement.Services;
 
 namespace ProjectManagement;
 
-public partial class NewDocumentationSetWindow : Window {
+public partial class NewDocumentationSetWindow {
     private readonly AppDbContext _context;
     private readonly DesignObject _designObject;
+    private readonly DocumentationSetService _documentationSetService;
 
     public NewDocumentationSetWindow(AppDbContext context, DesignObject designObject) {
         InitializeComponent();
         _context = context;
         _designObject = designObject;
         LoadMarks();
+        _documentationSetService = new DocumentationSetService(context);
     }
 
     private void LoadMarks() {
         MarkComboBox.ItemsSource = _context.Marks.ToList();
-    }
-
-    private void NumberValidationTextBox(object sender, TextCompositionEventArgs e) {
-        var regex = NumericRegex();
-        e.Handled = regex.IsMatch(e.Text);
     }
 
     private void SaveButton_Click(object sender, RoutedEventArgs e) {
@@ -33,17 +29,12 @@ public partial class NewDocumentationSetWindow : Window {
 
         var newSet = new DocumentationSet {
             Mark = selectedMark,
-            Number = int.TryParse(NumberTextBox.Text, out var number) ? number : 0,
             CreationDate = DateTime.Now,
             ModificationDate = DateTime.Now,
-            DesignObject = _designObject
+            DesignObjectId = _designObject.Id
         };
 
-        _context.DocumentationSets.Add(newSet);
-        _context.SaveChanges();
+        _documentationSetService.AddDocumentationSet(newSet);
         DialogResult = true;
     }
-
-    [GeneratedRegex("[^0-9]+")]
-    private static partial Regex NumericRegex();
 }

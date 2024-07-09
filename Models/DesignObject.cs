@@ -15,7 +15,7 @@ public class DesignObject : BaseEntity, ITreeViewItem {
     public virtual ICollection<DesignObject> InverseParentObject { get; set; } = new List<DesignObject>();
     public virtual DesignObject? ParentObject { get; set; }
     public virtual Project Project { get; set; } = null!;
-    [NotMapped] public string FullDesignObjectCode => ParentObject != null ? ParentObject.FullDesignObjectCode + "." + Code : Code;
+    [NotMapped] public string FullDesignObjectCode => ParentObject != null ? $"{ParentObject.FullDesignObjectCode}.{Code}" : $"{Project.Code}.{Code}";
     [NotMapped] public string Title => Name;
     [NotMapped] public ObservableCollection<ITreeViewItem> Children { get; set; } = [];
 }

@@ -10,5 +10,5 @@ public class Document : BaseEntity {
     public virtual DocumentType DocumentType { get; set; } = null!;
     public virtual DocumentationSet DocumentationSet { get; set; } = null!;
 
-    [NotMapped] public string FullDocumentCode => $"{DocumentType}-{Number}";
+    [NotMapped] public string FullDocumentCode => $"{DocumentationSet.FullSetCode}-{DocumentType.ShortName}-{Number}";
 }

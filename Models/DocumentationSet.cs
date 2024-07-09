@@ -16,8 +16,8 @@ public class DocumentationSet : BaseEntity, ITreeViewItem {
     [NotMapped]
     public string FullSetCode =>
         Number > 0
-            ? $"{DesignObject.Project.Code}-{DesignObject.ParentObject?.Code}-{Mark.ShortName}{Number}"
-            : $"{DesignObject.Project.Code}-{DesignObject.ParentObject?.Code}-{Mark.ShortName}";
+            ? $"{DesignObject.Project.Code}-{DesignObject.FullDesignObjectCode}-{Mark.ShortName}{Number}"
+            : $"{DesignObject.Project.Code}-{DesignObject.FullDesignObjectCode}-{Mark.ShortName}";
 
     [NotMapped] public string ProjectCode => DesignObject.Project.Code;
     [NotMapped] public string DesignObjectCode => DesignObject.FullDesignObjectCode;

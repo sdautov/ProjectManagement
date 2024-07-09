@@ -1,4 +1,4 @@
-INSERT INTO DocumentType (FullName, ShortName) VALUES
+INSERT INTO DocumentTypes (FullName, ShortName) VALUES
 ('Сборочный чертеж', 'СБ'),
 ('Чертеж общего вида', 'ВО'),
 ('Теоретический чертеж', 'ТЧ'),

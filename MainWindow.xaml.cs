@@ -63,6 +63,8 @@ public partial class MainWindow : INotifyPropertyChanged {
             .Query()
             .Include(ds => ds.Mark)
             .Include(ds => ds.Documents)
+            .Include(ds => ds.Documents)
+            .ThenInclude(d => d.DocumentType)
             .Load();
 
         _context.Entry(designObject)
@@ -110,22 +112,11 @@ public partial class MainWindow : INotifyPropertyChanged {
         var projectData = designObject.DocumentationSets.ToList();
         ProjectDataGrid.ItemsSource = projectData;
     }
-
+    
     private void AddDocumentButton_Click(object sender, RoutedEventArgs e) {
         if (ProjectTreeView.SelectedItem is DocumentationSet selectedSet) {
-            var newDocumentWindow = new NewDocumentWindow(_context);
-            if (newDocumentWindow.ShowDialog() == true) {
-                var newDocument = new Document {
-                    DocumentType = newDocumentWindow.DocumentType,
-                    Number = newDocumentWindow.Number,
-                    Name = newDocumentWindow.DocumentName,
-                    CreationDate = DateTime.Now,
-                    ModificationDate = DateTime.Now
-                };
-                selectedSet.Documents.Add(newDocument);
-                _context.SaveChanges();
-                DocumentationDataGrid.ItemsSource = selectedSet.Documents.ToList();
-            }
+            var newDocumentWindow = new NewDocumentWindow(_context, selectedSet);
+            if (newDocumentWindow.ShowDialog() == true) DocumentationDataGrid.ItemsSource = selectedSet.Documents.ToList();
         }
         else {
             MessageBox.Show("Выберите комплект для добавления документа.", "Добавление документа", MessageBoxButton.OK, MessageBoxImage.Information);
@@ -149,7 +140,7 @@ public partial class MainWindow : INotifyPropertyChanged {
 
     private void EditDocumentButton_Click(object sender, RoutedEventArgs e) {
         if (DocumentationDataGrid.SelectedItem is Document selectedDocument) {
-            var editDocumentWindow = new NewDocumentWindow(_context) {
+            var editDocumentWindow = new EditDocumentWindow(_context) {
                 DocumentType = selectedDocument.DocumentType,
                 Number = selectedDocument.Number,
                 DocumentName = selectedDocument.Name
